@@ -1,0 +1,19 @@
+{
+    "items": {
+      "pickaxe": {
+        "name": "pickaxe",
+        "description": "A heavy pickaxe, useful for mining or defense.",
+        "portable": true
+      },
+      "bread": {
+        "name": "bread",
+        "description": "A small loaf of bread, enough to stave off hunger.",
+        "portable": true
+      },
+      "razor": {
+        "name": "razor",
+        "description": "A deadly weapon used by Golds in battle.",
+        "portable": true
+      }
+    }
+  }

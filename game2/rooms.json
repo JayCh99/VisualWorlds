@@ -1,0 +1,17 @@
+{
+    "Grand Atrium": {
+        "description": "The opulent heart of Luna's political power, filled with Gold elites.",
+        "items": ["Invitation"],
+        "connections": {"north": "Sovereign's Chamber", "east": "Observation Deck"}
+    },
+    "Sovereign's Chamber": {
+        "description": "The throne room of the Sovereign, resplendent with symbols of power.",
+        "items": [],
+        "connections": {"south": "Grand Atrium"}
+    },
+    "Observation Deck": {
+        "description": "A breathtaking view of Earth and the stars, often used for quiet reflection.",
+        "items": ["HoloKey"],
+        "connections": {"west": "Grand Atrium"}
+    }
+}

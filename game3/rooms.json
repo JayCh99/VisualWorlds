@@ -1,0 +1,29 @@
+{
+    "rooms": {
+      "Helium Mines": {
+        "name": "Helium Mines",
+        "description": "You are deep within the Helium-3 mines of Mars, surrounded by oppressive darkness and the hum of mining equipment.",
+        "items": ["pickaxe"],
+        "exits": {
+          "north": "Lykos Colony"
+        }
+      },
+      "Lykos Colony": {
+        "name": "Lykos Colony",
+        "description": "The colony is bustling with activity. Reds toil endlessly to extract Helium-3 under the watchful eyes of Gold overlords.",
+        "items": ["bread"],
+        "exits": {
+          "south": "Helium Mines",
+          "east": "Institute"
+        }
+      },
+      "Institute": {
+        "name": "Institute",
+        "description": "You are at the infamous Institute, where Golds battle to prove their superiority.",
+        "items": ["razor"],
+        "exits": {
+          "west": "Lykos Colony"
+        }
+      }
+    }
+  }

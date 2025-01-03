@@ -1,0 +1,19 @@
+{
+    "commands": {
+      "go": {
+        "syntax": "go [direction]",
+        "method": "move",
+        "args": ["direction"]
+      },
+      "take": {
+        "syntax": "take [item]",
+        "method": "take",
+        "args": ["item_name"]
+      },
+      "throw": {
+        "syntax": ["throw [item]", "throw [item] at [target]"],
+        "method": "throw",
+        "args": ["item_name", "?target"]
+      }
+    }
+  }

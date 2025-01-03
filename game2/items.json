@@ -1,0 +1,10 @@
+{
+    "Invitation": {
+        "description": "An elegant invitation to a secret Senate meeting.",
+        "use": "Access to the Sovereign's Chamber."
+    },
+    "HoloKey": {
+        "description": "A holographic key used to unlock restricted areas.",
+        "use": "Reveals hidden information in the Grand Atrium."
+    }
+}

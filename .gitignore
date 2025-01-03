@@ -1,0 +1,11 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+
+# System files
+.DS_Store
+
+# Large books
+game4/Red Rising.pdf

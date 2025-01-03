@@ -1,0 +1,9 @@
+{
+  "creatures": {
+    "overseer": {
+      "name": "overseer",
+      "description": "A cruel overseer barking orders at the Reds.",
+      "hostile": true
+    }
+  }
+}

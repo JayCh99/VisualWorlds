@@ -1,0 +1,14 @@
+{
+    "Invitation": {
+        "Sovereign's Chamber": {
+            "success": "You gain entry to the Sovereign's Chamber, where decisions of great import are made.",
+            "effect": []
+        }
+    },
+    "HoloKey": {
+        "Grand Atrium": {
+            "success": "The HoloKey reveals a hidden compartment with a Senate Dossier.",
+            "effect": [{"room": "Grand Atrium", "item": "Senate Dossier"}]
+        }
+    }
+}
