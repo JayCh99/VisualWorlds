@@ -51,6 +51,8 @@ class Room:
             Direction.WEST: None
         }
 
+        self.canon_event: Optional[str] = generate_canon_event(self)
+
 class GameWorld:
     def __init__(self):
         self.rooms: Dict[str, Room] = {}
@@ -361,7 +363,8 @@ class GameUI:
         # Update description
         self.description_text.delete(1.0, tk.END)
         self.description_text.insert(tk.END, f"Current Room: {self.game_world.current_room.name}\n\n")
-        self.description_text.insert(tk.END, self.game_world.current_room.description)
+        self.description_text.insert(tk.END, f"{self.game_world.current_room.description}\n\n")
+        self.description_text.insert(tk.END, f"Canon Event: {self.game_world.current_room.canon_event if self.game_world.current_room.canon_event else 'None'}\n")
         
         # Update image
         if self.game_world.current_room.image_path:
@@ -464,11 +467,6 @@ def process_book(pdf_path: str, use_gemini: bool = True) -> str:
     # Extract text content from PDF
     story = extract_text_from_pdf(pdf_path)
 
-    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
-    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
-    
-    model = genai.GenerativeModel("gemini-1.5-flash") 
-
     # Process with selected AI model
     if use_gemini:
         return process_book_with_gemini(story)
@@ -488,11 +486,32 @@ def generate_game_data():
         print(world_data)
 
 
-def generate_canon_event():
+def generate_canon_event(room: Room) -> str:
     text = extract_text_from_pdf("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
     
-    print(story)
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash") 
 
+    prompt = f"""
+    Using the attached story and provided room description, create a desscription of the canon event that occurs in the story in the room.
+    
+    ##### STORY #####
+    {text}
+    
+    ##### ROOM DESCRIPTION #####
+    Room: {room.name}
+    Description: {room.description}
+    """
+    
+    response = model.generate_content(
+        [prompt], 
+        # generation_config=genai.GenerationConfig(
+        #     response_mime_type="application/json", 
+
+        # )
+    )
+    return response.text
 
 def run_game():
     # Initialize game world
@@ -520,7 +539,7 @@ def run_game():
 
 
 if __name__ == "__main__":
-    # generate_game_data()j
+    # generate_game_data()
     run_game()
 
 
