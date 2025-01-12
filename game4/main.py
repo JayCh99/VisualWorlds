@@ -365,20 +365,20 @@ def process_book_with_gemini(pdf_path: str, setting_desc: str, protagonist_desc:
 
     # My code
     prompt1 = f"""
-    Generate a world setup for a text adventure game based on the attached book.
+    Generate a world setup for a text adventure game based on the attached book, set aboard a spaceship.
 
-    Create a world with up to 6 rooms. Provide:
-    1. A list of rooms with descriptions and image prompts that reference the book
+    Create a world with up to 6 rooms representing different areas of the spaceship. Provide:
+    1. A list of rooms with descriptions and image prompts that reference the book and spaceship setting
     2. A list of connections between the rooms detailed above, specifying which rooms connect and in what direction. Make sure all rooms are reachable from every other room through some path and only use rooms that are in the list above.
     
     For each room include:
-    - A name (100 characters max, don't include new lines)
-    - A description referencing the book (50 words max, don't include new lines)
-    - An image prompt for DALL-E to generate an illustration (100 words max, don't include new lines)
+    - A name for the spaceship location (STRICTLY 100 characters max)
+    - A description referencing details from the book and describing the spaceship setting (STRICTLY 50 words max) 
+    - An image prompt for DALL-E to generate an illustration of the spaceship interior (STRICTLY 100 words max)
     
     For connections, specify:
-    - Which two rooms are connected
-    - The direction (north, south, east, or west)
+    - Which two spaceship rooms are connected
+    - The direction (north, south, east, or west) through the ship's corridors
     """
     
     summary = model.generate_content(
@@ -418,12 +418,14 @@ def run_game():
 
 
 def generate_game_data():
-    world_setup = process_book_with_gemini("Golden_Son_Red_Rising_Saga_2_-_Pierce_Brown.pdf", 
-                                         "A mysterious Victorian mansion", 
-                                         "A curious explorer seeking ancient secrets")
+    # world_setup = process_book_with_gemini("Golden_Son_Red_Rising_Saga_2_-_Pierce_Brown.pdf", 
+    #                                      "A mysterious Victorian mansion",
+    #                                      "A curious explorer seeking ancient secrets")
 
-    with open('game_data.json', 'w') as f:
-        json.dump({'world': world_setup}, f)
+    # world_setup = '{"connections": [{"direction": "South", "room1": "Shower Room", "room2": "Hallway"}, {"direction": "East", "room1": "Hallway", "room2": "Ready Room"}, {"direction": "Down", "room1": "Ready Room", "room2": "Maintenance Closet"}, {"direction": "Down", "room1": "Maintenance Closet", "room2": "Escape Craft Chute"}, {"direction": "Down", "room1": "Escape Craft Chute", "room2": "Escape Craft Lounge"}, {"direction": "West", "room1": "Hallway", "room2": "Armory"}, {"direction": "North", "room1": "Hallway", "room2": "Breached Corridor"}, {"direction": "Down", "room1": "Escape Craft Lounge", "room2": "Martian Fjord"}], "rooms": [{"description": "A breached shower room with zero gravity. Dead Sol Guard soldiers and monstrous obsidian-like intruders. Gore and viscera cover the walls and floor.", "image_prompt": "zero gravity shower room battle scene, gore, viscera, dead soldiers, monstrous obsidian creatures, dripping membrane", "name": "Shower Room"}, {"description": "A long corridor with flickering emergency lights. Bodies of Sol Guard soldiers, some in robotic armor, litter the floor. Brownish bloodstains mark the walls.", "image_prompt": "dark corridor with emergency lights, dead soldiers in robotic armor, blood stains on walls, zero gravity, floating debris", "name": "Hallway"}, {"description": "A ransacked room stripped of pilot gear. An open EVA suit locker reveals a hidden passage.", "image_prompt": "empty ready room, open lockers, missing gear, dim lighting, damaged EVA suit locker", "name": "Ready Room"}, {"description": "A small, cramped closet filled with cleaning robots. A hidden panel leads to an escape chute.", "image_prompt": "small maintenance closet, cleaning robots, hidden escape route, dark, claustrophobic, open panel", "name": "Maintenance Closet"}, {"description": "A narrow, twisting chute leading down to the escape craft. Metal walls flash by as gravity pulls you downwards.", "image_prompt": "narrow, twisting chute, metal walls, gravity, downward motion, claustrophobic", "name": "Escape Craft Chute"}, {"description": "A luxurious lounge within the escape craft, now breached and spinning. Sunlight streams through a hole in the hull. Dead and dying passengers float amidst debris.", "image_prompt": "luxurious escape craft lounge, breached hull, sunlight, zero gravity, dead bodies, debris, spinning room", "name": "Escape Craft Lounge"}, {"description": "A darkened armory with scattered weapons and dead Grays. Shadows move in the corners.", "image_prompt": "dark armory, scattered weapons, dead Grays, lurking shadows, tense atmosphere", "name": "Armory"}, {"description": "A section of hallway bathed in red light, twisted and mangled, resembling a throat. Shadows flicker within, suggesting movement.", "image_prompt": "red-lit corridor, twisted metal, shadows, blood, sense of danger, like a throat", "name": "Breached Corridor"}, {"description": "A Martian fjord with towering cliffs and reddish water. The escape pod dangles precariously over the edge.", "image_prompt": "Martian fjord, cliffs, red water, escape pod dangling, vast landscape", "name": "Martian Fjord"}]}'
+
+    # with open('game_data.json', 'w') as f:
+    #     json.dump({'world': world_setup}, f)
     
     # Load and print
     with open('game_data.json', 'r') as f:
