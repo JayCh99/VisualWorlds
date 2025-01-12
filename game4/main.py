@@ -11,6 +11,8 @@ from io import BytesIO
 from enum import Enum
 import typing_extensions as typing
 import tkinter.ttk as ttk
+import openai
+from pypdf import PdfReader
 
 
 class Direction(str, Enum):
@@ -32,6 +34,9 @@ class ConnectionDict(typing.TypedDict):
 class WorldSetup(typing.TypedDict):
     rooms: List[RoomDict]
     connections: List[ConnectionDict]
+    original_room_visit_order: List[str]
+
+
 
 class Room:
     def __init__(self, name: str, description: str, image_prompt: str):
@@ -323,6 +328,31 @@ class GameUI:
         if next_room:
             self.game_world.current_room = next_room
             self.update_display()
+            
+            # Generate new world state after moving
+            
+            # new_world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
+            
+            # Load new world data into the game world
+            # self.load_new_world_data(new_world_setup)
+
+    def load_new_world_data(self, world_setup: str):
+        # Parse the new world setup
+        world_data = json.loads(world_setup)
+        rooms = world_data['rooms']
+        connections = world_data['connections']
+        
+        # Clear existing rooms and connections
+        self.game_world.rooms.clear()
+        
+        # Create new rooms
+        for room_data in rooms:
+            room = Room(room_data["name"], room_data["description"], room_data["image_prompt"])
+            self.game_world.add_room(room)
+        
+        # Set up new connections
+        for conn in connections:
+            self.game_world.connect_rooms(conn["room1"], conn["room2"], Direction(conn["direction"]))
 
     def update_display(self):
         if not self.game_world.current_room:
@@ -354,22 +384,49 @@ class GameUI:
         self.root.mainloop()
 
 
-def process_book_with_gemini(pdf_path: str, setting_desc: str, protagonist_desc: str):
-    # TODO: Fix
+def process_book_with_openai(story: str) -> str:
+    client = openai.OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
+
+    response = client.beta.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{
+            "role": "system", 
+            "content": f"""
+            I'm creating a playable version of the story attached. Create a list of rooms and the connections between them.
+
+            For each room include:
+            - A name for the spaceship location (STRICTLY 100 characters max)
+            - A description referencing details from the book and describing the spaceship setting (STRICTLY 50 words max) 
+            - An image prompt for DALL-E to generate an illustration of the spaceship interior (STRICTLY 100 words max)
+            
+            For connections, specify:
+            - Which two spaceship rooms are connected
+            - The direction (north, south, east, or west) through the ship's corridors
+
+            ##### STORY #####
+            {story}
+            """
+        }],
+        response_format={"type": "world_output"},
+    )
+
+    return response.choices[0].message.content
+
+def process_book_with_gemini(story: str) -> str:
     os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
     genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
     
-    uploaded_file = genai.upload_file(path=pdf_path, display_name="Red Rising") 
-    print(f"Uploaded file '{uploaded_file.display_name}' as: {uploaded_file.uri}")
     model = genai.GenerativeModel("gemini-1.5-flash") 
 
-    # My code
-    prompt1 = f"""
-    Generate a world setup for a text adventure game based on the attached book, set aboard a spaceship.
+    prompt = f"""
+    I'm creating a playable version of the story attached. Create a list of rooms and the connections between them.
 
-    Create a world with up to 6 rooms representing different areas of the spaceship. Provide:
+    Create a world with rooms representing different areas of the spaceship. Provide:
     1. A list of rooms with descriptions and image prompts that reference the book and spaceship setting
     2. A list of connections between the rooms detailed above, specifying which rooms connect and in what direction. Make sure all rooms are reachable from every other room through some path and only use rooms that are in the list above.
+    3. A list of room names in the order they were visited in the book.
     
     For each room include:
     - A name for the spaceship location (STRICTLY 100 characters max)
@@ -379,17 +436,62 @@ def process_book_with_gemini(pdf_path: str, setting_desc: str, protagonist_desc:
     For connections, specify:
     - Which two spaceship rooms are connected
     - The direction (north, south, east, or west) through the ship's corridors
+
+
+    ##### STORY #####
+    {story}
     """
     
-    summary = model.generate_content(
-        [uploaded_file, prompt1], 
+    response = model.generate_content(
+        [prompt], 
         generation_config=genai.GenerationConfig(
             response_mime_type="application/json", 
             response_schema=WorldSetup
         )
     )
-    print("Summary:\n", summary.text)
-    return summary.text
+    return response.text
+
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    reader = PdfReader(pdf_path)
+    story = ""
+    for page in reader.pages:
+        story += page.extract_text()
+    return story
+
+
+def process_book(pdf_path: str, use_gemini: bool = True) -> str:
+    # Extract text content from PDF
+    story = extract_text_from_pdf(pdf_path)
+
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    
+    model = genai.GenerativeModel("gemini-1.5-flash") 
+
+    # Process with selected AI model
+    if use_gemini:
+        return process_book_with_gemini(story)
+    else:
+        return process_book_with_openai(story)
+
+def generate_game_data():
+    world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
+
+    with open('game_data.json', 'w') as f:
+        json.dump({'world': world_setup}, f)
+    
+    # Load and print
+    with open('game_data.json', 'r') as f:
+        data = json.load(f)
+        world_data = json.loads(data['world'])
+        print(world_data)
+
+
+def generate_canon_event():
+    text = extract_text_from_pdf("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
+    
+    print(story)
 
 
 def run_game():
@@ -406,7 +508,7 @@ def run_game():
     for room_data in rooms:
         room = Room(room_data["name"], room_data["description"], room_data["image_prompt"])
         game_world.add_room(room)
-        game_world.generate_room_image(room)
+        # game_world.generate_room_image(room)
     
     # Then set up connections
     for conn in connections:
@@ -417,25 +519,8 @@ def run_game():
     game_ui.run()
 
 
-def generate_game_data():
-    # world_setup = process_book_with_gemini("Golden_Son_Red_Rising_Saga_2_-_Pierce_Brown.pdf", 
-    #                                      "A mysterious Victorian mansion",
-    #                                      "A curious explorer seeking ancient secrets")
-
-    # world_setup = '{"connections": [{"direction": "South", "room1": "Shower Room", "room2": "Hallway"}, {"direction": "East", "room1": "Hallway", "room2": "Ready Room"}, {"direction": "Down", "room1": "Ready Room", "room2": "Maintenance Closet"}, {"direction": "Down", "room1": "Maintenance Closet", "room2": "Escape Craft Chute"}, {"direction": "Down", "room1": "Escape Craft Chute", "room2": "Escape Craft Lounge"}, {"direction": "West", "room1": "Hallway", "room2": "Armory"}, {"direction": "North", "room1": "Hallway", "room2": "Breached Corridor"}, {"direction": "Down", "room1": "Escape Craft Lounge", "room2": "Martian Fjord"}], "rooms": [{"description": "A breached shower room with zero gravity. Dead Sol Guard soldiers and monstrous obsidian-like intruders. Gore and viscera cover the walls and floor.", "image_prompt": "zero gravity shower room battle scene, gore, viscera, dead soldiers, monstrous obsidian creatures, dripping membrane", "name": "Shower Room"}, {"description": "A long corridor with flickering emergency lights. Bodies of Sol Guard soldiers, some in robotic armor, litter the floor. Brownish bloodstains mark the walls.", "image_prompt": "dark corridor with emergency lights, dead soldiers in robotic armor, blood stains on walls, zero gravity, floating debris", "name": "Hallway"}, {"description": "A ransacked room stripped of pilot gear. An open EVA suit locker reveals a hidden passage.", "image_prompt": "empty ready room, open lockers, missing gear, dim lighting, damaged EVA suit locker", "name": "Ready Room"}, {"description": "A small, cramped closet filled with cleaning robots. A hidden panel leads to an escape chute.", "image_prompt": "small maintenance closet, cleaning robots, hidden escape route, dark, claustrophobic, open panel", "name": "Maintenance Closet"}, {"description": "A narrow, twisting chute leading down to the escape craft. Metal walls flash by as gravity pulls you downwards.", "image_prompt": "narrow, twisting chute, metal walls, gravity, downward motion, claustrophobic", "name": "Escape Craft Chute"}, {"description": "A luxurious lounge within the escape craft, now breached and spinning. Sunlight streams through a hole in the hull. Dead and dying passengers float amidst debris.", "image_prompt": "luxurious escape craft lounge, breached hull, sunlight, zero gravity, dead bodies, debris, spinning room", "name": "Escape Craft Lounge"}, {"description": "A darkened armory with scattered weapons and dead Grays. Shadows move in the corners.", "image_prompt": "dark armory, scattered weapons, dead Grays, lurking shadows, tense atmosphere", "name": "Armory"}, {"description": "A section of hallway bathed in red light, twisted and mangled, resembling a throat. Shadows flicker within, suggesting movement.", "image_prompt": "red-lit corridor, twisted metal, shadows, blood, sense of danger, like a throat", "name": "Breached Corridor"}, {"description": "A Martian fjord with towering cliffs and reddish water. The escape pod dangles precariously over the edge.", "image_prompt": "Martian fjord, cliffs, red water, escape pod dangling, vast landscape", "name": "Martian Fjord"}]}'
-
-    # with open('game_data.json', 'w') as f:
-    #     json.dump({'world': world_setup}, f)
-    
-    # Load and print
-    with open('game_data.json', 'r') as f:
-        data = json.load(f)
-        world_data = json.loads(data['world'])
-        print(world_data)
-
-
 if __name__ == "__main__":
-    # generate_game_data()
+    # generate_game_data()j
     run_game()
 
 
