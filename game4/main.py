@@ -484,7 +484,7 @@ def process_book(pdf_path: str, use_gemini: bool = True) -> str:
         return process_book_with_gemini(story)
     else:
         return process_book_with_openai(story)
-
+    
 def generate_game_data():
     # world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
 
@@ -495,16 +495,15 @@ def generate_game_data():
     with open('game_data.json', 'r') as f:
         data = json.load(f)
         if isinstance(data['world'], str):
-            world_data = json.loads(data['world'])  # Parse if it's a string
+            world_data = json.loads(data['world'])
         else:
-            world_data = data['world']  # Use as-is if it's already a dict
-        # world_data = json.loads(data['world'])
+            world_data = data['world'] 
         print(world_data)
     
     # Generate canon events for each room
     for room in world_data['rooms']:
-        if True:
-        # if 'canon_event' not in room:
+        # if True:
+        if 'canon_event' not in room:
             print(f"Generating canon event for {room['name']}")
             room['canon_event'] = generate_canon_event(room)
     
@@ -604,7 +603,7 @@ def run_game():
 
 
 if __name__ == "__main__":
-    generate_game_data()
+    # generate_game_data()
     run_game()
 
 
