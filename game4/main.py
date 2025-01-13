@@ -36,10 +36,11 @@ class WorldSetup(typing.TypedDict):
     connections: List[ConnectionDict]
     original_room_visit_order: List[str]
 
+Event = typing.NamedTuple('Event', [('event', str), ('is_canon', bool)])
 
 
 class Room:
-    def __init__(self, name: str, description: str, image_prompt: str):
+    def __init__(self, name: str, description: str, image_prompt: str, canon_event: str):
         self.name = name
         self.description = description
         self.image_prompt = image_prompt
@@ -51,19 +52,30 @@ class Room:
             Direction.WEST: None
         }
 
-        self.canon_event: Optional[str] = generate_canon_event(self)
+        self.canon_event = canon_event
 
 class GameWorld:
-    def __init__(self):
+    def __init__(self, original_room_visit_order: List[str] = None):
         self.rooms: Dict[str, Room] = {}
         self.current_room: Optional[Room] = None
+        self.original_room_visit_order = original_room_visit_order or []
         os.environ["OPENAI_API_KEY"] = "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"
         self.openai_client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+        
+        self.current_event: Optional[Event] = None
+        self.visited_rooms = []
+        self.seen_events = []
+    
+    def is_canon_route(self) -> bool:
+        # return True
+        return self.visited_rooms == self.original_room_visit_order[:min(len(self.original_room_visit_order), len(self.visited_rooms))]
 
     def add_room(self, room: Room):
         self.rooms[room.name] = room
         if not self.current_room:
+            self.visited_rooms.append(room.name)
             self.current_room = room
+            self.current_event = Event(event=room.canon_event, is_canon=True)
 
     def connect_rooms(self, room1_name: str, room2_name: str, direction: Direction):
         if room1_name not in self.rooms or room2_name not in self.rooms:
@@ -117,6 +129,12 @@ class GameWorld:
         except Exception as e:
             print(f"Error generating image for room {room.name}: {e}")
             return None
+    
+    def get_event(self, room: Room) -> Tuple[str, bool]:
+        if self.is_canon_route():
+            return room.canon_event, True
+        else:
+            return generate_non_canon_event(room, self.seen_events), False
 
 class GameUI:
     def __init__(self, game_world: GameWorld):
@@ -329,50 +347,44 @@ class GameUI:
         next_room = self.game_world.current_room.connections[direction]
         if next_room:
             self.game_world.current_room = next_room
+            self.game_world.visited_rooms.append(self.game_world.current_room.name)
+            # Generate and save new canon event for the room we just moved to
+            event, is_canon = self.game_world.get_event(self.game_world.current_room)
+            self.game_world.current_event = Event(event=event, is_canon=is_canon)
+            self.game_world.seen_events.append(Event)
+            
+            
             self.update_display()
             
-            # Generate new world state after moving
-            
-            # new_world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
-            
-            # Load new world data into the game world
-            # self.load_new_world_data(new_world_setup)
-
-    def load_new_world_data(self, world_setup: str):
-        # Parse the new world setup
-        world_data = json.loads(world_setup)
-        rooms = world_data['rooms']
-        connections = world_data['connections']
-        
-        # Clear existing rooms and connections
-        self.game_world.rooms.clear()
-        
-        # Create new rooms
-        for room_data in rooms:
-            room = Room(room_data["name"], room_data["description"], room_data["image_prompt"])
-            self.game_world.add_room(room)
-        
-        # Set up new connections
-        for conn in connections:
-            self.game_world.connect_rooms(conn["room1"], conn["room2"], Direction(conn["direction"]))
 
     def update_display(self):
         if not self.game_world.current_room:
             return
             
+        # Update description text size based on whether there's an image
+        if self.game_world.current_room.image_path:
+            self.description_text.config(height=10, width=50)  # Original size
+        else:
+            self.description_text.config(height=20, width=80)  # Bigger when no image
+        
         # Update description
         self.description_text.delete(1.0, tk.END)
         self.description_text.insert(tk.END, f"Current Room: {self.game_world.current_room.name}\n\n")
         self.description_text.insert(tk.END, f"{self.game_world.current_room.description}\n\n")
-        self.description_text.insert(tk.END, f"Canon Event: {self.game_world.current_room.canon_event if self.game_world.current_room.canon_event else 'None'}\n")
+        print(self.game_world.current_event.is_canon)
+        event_type = "Non-Canon" if not self.game_world.current_event.is_canon else "Canon"
+        self.description_text.insert(tk.END, f"{event_type} Event: {self.game_world.current_event.event}\n")
         
-        # Update image
+        # Update image if it exists
         if self.game_world.current_room.image_path:
             image = Image.open(self.game_world.current_room.image_path)
             image = image.resize((512, 512))  # Resize for display
             photo = ImageTk.PhotoImage(image)
             self.image_label.configure(image=photo)
             self.image_label.image = photo
+        else:
+            self.image_label.configure(image='')
+            self.image_label.image = None
 
         # Update button states
         self.north_button.config(state=tk.NORMAL if self.game_world.current_room.connections[Direction.NORTH] else tk.DISABLED)
@@ -474,19 +486,38 @@ def process_book(pdf_path: str, use_gemini: bool = True) -> str:
         return process_book_with_openai(story)
 
 def generate_game_data():
-    world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
+    # world_setup = process_book("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf", use_gemini=True)
 
-    with open('game_data.json', 'w') as f:
-        json.dump({'world': world_setup}, f)
+    # with open('game_data.json', 'w') as f:
+    #     json.dump({'world': world_setup}, f)
     
     # Load and print
     with open('game_data.json', 'r') as f:
         data = json.load(f)
-        world_data = json.loads(data['world'])
+        if isinstance(data['world'], str):
+            world_data = json.loads(data['world'])  # Parse if it's a string
+        else:
+            world_data = data['world']  # Use as-is if it's already a dict
+        # world_data = json.loads(data['world'])
         print(world_data)
+    
+    # Generate canon events for each room
+    for room in world_data['rooms']:
+        if True:
+        # if 'canon_event' not in room:
+            print(f"Generating canon event for {room['name']}")
+            room['canon_event'] = generate_canon_event(room)
+    
+    for room in world_data['rooms']:
+        print(f"Room: {room['name']}")
+        print(f"Canon Event: {room['canon_event']}")
+
+    # Save updated data back to file
+    with open('game_data.json', 'w') as f:
+        json.dump({'world': world_data}, f, indent=4)
 
 
-def generate_canon_event(room: Room) -> str:
+def generate_canon_event(room: dict) -> str:
     text = extract_text_from_pdf("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
     
     os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
@@ -494,14 +525,14 @@ def generate_canon_event(room: Room) -> str:
     model = genai.GenerativeModel("gemini-1.5-flash") 
 
     prompt = f"""
-    Using the attached story and provided room description, create a desscription of the canon event that occurs in the story in the room.
-    
+    What event in the story occurs in this room? Keep the description to 100 words max.
+
     ##### STORY #####
     {text}
     
     ##### ROOM DESCRIPTION #####
-    Room: {room.name}
-    Description: {room.description}
+    Room: {room['name']}
+    Description: {room['description']}
     """
     
     response = model.generate_content(
@@ -513,19 +544,53 @@ def generate_canon_event(room: Room) -> str:
     )
     return response.text
 
-def run_game():
-    # Initialize game world
-    game_world = GameWorld()
 
+def generate_non_canon_event(room: Room, seen_events: List[str]) -> str:
+    text = extract_text_from_pdf("Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
+
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash") 
+
+    prompt = f"""
+    Using the attached story, provided room description with its original canon event, and a list of canon events seen so far, create a desscription of a plausible non-canon event that occurs in the story in the room.
+    Keep the description to 100 words max.
+
+    ##### STORY #####
+    {text}
+    
+    ##### ROOM DESCRIPTION #####
+    Room: {room.name}
+    Description: {room.description}
+    Canon Event: {room.canon_event}
+
+    ##### EVENTS SEEN SO FAR #####
+    {seen_events}
+    """
+
+    response = model.generate_content(
+        [prompt], 
+    )
+    return response.text
+
+def run_game():
     with open('game_data.json', 'r') as f:
         data = json.load(f)
-        world_data = json.loads(data['world'])  # Parse the string into JSON
+        if isinstance(data['world'], str):
+            world_data = json.loads(data['world'])  # Parse if it's a string
+        else:
+            world_data = data['world']  # Use as-is if it's already a dict
+        # world_data = json.loads(data['world'])  # Parse the string into JSON
         rooms = world_data['rooms']
         connections = world_data['connections']
+        original_room_visit_order = world_data.get('original_room_visit_order', [])  # Get visit order
+    
+    # Initialize game world with visit order
+    game_world = GameWorld(original_room_visit_order=original_room_visit_order)
     
     # Create rooms first
     for room_data in rooms:
-        room = Room(room_data["name"], room_data["description"], room_data["image_prompt"])
+        room = Room(room_data["name"], room_data["description"], room_data["image_prompt"], room_data["canon_event"])
         game_world.add_room(room)
         # game_world.generate_room_image(room)
     
@@ -539,7 +604,7 @@ def run_game():
 
 
 if __name__ == "__main__":
-    # generate_game_data()
+    generate_game_data()
     run_game()
 
 

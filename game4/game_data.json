@@ -1,1 +1,119 @@
-{"world": "{\"connections\": [{\"direction\": \"north\", \"room1\": \"Breach Room\", \"room2\": \"Shower Block\"}, {\"direction\": \"south\", \"room1\": \"Shower Block\", \"room2\": \"Breach Room\"}, {\"direction\": \"east\", \"room1\": \"Shower Block\", \"room2\": \"Hallway\"}, {\"direction\": \"west\", \"room1\": \"Hallway\", \"room2\": \"Shower Block\"}, {\"direction\": \"north\", \"room1\": \"Hallway\", \"room2\": \"GravLift Station\"}, {\"direction\": \"south\", \"room1\": \"GravLift Station\", \"room2\": \"Hallway\"}, {\"direction\": \"east\", \"room1\": \"GravLift Station\", \"room2\": \"Maintenance Corridor\"}, {\"direction\": \"west\", \"room1\": \"Maintenance Corridor\", \"room2\": \"GravLift Station\"}, {\"direction\": \"north\", \"room1\": \"Maintenance Corridor\", \"room2\": \"Pilot Ready Room\"}, {\"direction\": \"south\", \"room1\": \"Pilot Ready Room\", \"room2\": \"Maintenance Corridor\"}, {\"direction\": \"east\", \"room1\": \"Pilot Ready Room\", \"room2\": \"Emergency Escape Craft\"}, {\"direction\": \"west\", \"room1\": \"Emergency Escape Craft\", \"room2\": \"Pilot Ready Room\"}], \"original_room_visit_order\": [\"Breach Room\", \"Shower Block\", \"Hallway\", \"GravLift Station\", \"Maintenance Corridor\", \"Pilot Ready Room\", \"Emergency Escape Craft\"], \"rooms\": [{\"description\": \"A large room where the initial breach occurred, showing signs of alien intrusion and damage.\", \"image_prompt\": \"A spaceship room with a large hole in the wall covered by a pulsating, fleshy membrane; dark, amphibian-like creatures lie on the floor.\", \"name\": \"Breach Room\"}, {\"description\": \"A shower block turned into a gruesome battleground with floating bodies and blood stains.\", \"image_prompt\": \"A spaceship shower block in zero-gravity, with corpses of soldiers floating amidst blood splatter; alien creatures with large heads and pale skin attack.\", \"name\": \"Shower Block\"}, {\"description\": \"A long corridor with broken tiles and floating debris, signs of a fierce battle.\", \"image_prompt\": \"A spaceship corridor in zero-gravity with floating bodies of soldiers in futuristic armor; blood droplets and spent cartridges drift through the scene.\", \"name\": \"Hallway\"}, {\"description\": \"A gravLift station where a standoff with the alien creatures takes place; a tense moment.\", \"image_prompt\": \"A spaceship gravLift station with Sol Guards forming a defensive circle against approaching alien figures.\", \"name\": \"GravLift Station\"}, {\"description\": \"A maintenance corridor where the protagonists navigate during the escape; damaged metal and dark shadows.\", \"image_prompt\": \"A dark and damaged spaceship maintenance corridor, with the protagonists floating through it and sounds of battle echoing.\", \"name\": \"Maintenance Corridor\"}, {\"description\": \"A ready room with opened lockers and missing gear; signs of hasty departure.\", \"image_prompt\": \"A spaceship ready room in disarray, with opened lockers and scattered equipment, suggesting a quick escape by the pilots.\", \"name\": \"Pilot Ready Room\"}, {\"description\": \"A hidden emergency escape craft, a last resort for survival.\", \"image_prompt\": \"A hidden spaceship escape pod tucked away in a maintenance closet; sleek design and advanced technology.\", \"name\": \"Emergency Escape Craft\"}]}"}
+{
+    "world": {
+        "connections": [
+            {
+                "direction": "south",
+                "room1": "Breach Room",
+                "room2": "Shower Block"
+            },
+            {
+                "direction": "north",
+                "room1": "Shower Block",
+                "room2": "Breach Room"
+            },
+            {
+                "direction": "west",
+                "room1": "Shower Block",
+                "room2": "Hallway"
+            },
+            {
+                "direction": "east",
+                "room1": "Hallway",
+                "room2": "Shower Block"
+            },
+            {
+                "direction": "north",
+                "room1": "Hallway",
+                "room2": "GravLift Station"
+            },
+            {
+                "direction": "south",
+                "room1": "GravLift Station",
+                "room2": "Hallway"
+            },
+            {
+                "direction": "west",
+                "room1": "GravLift Station",
+                "room2": "Maintenance Corridor"
+            },
+            {
+                "direction": "east",
+                "room1": "Maintenance Corridor",
+                "room2": "GravLift Station"
+            },
+            {
+                "direction": "north",
+                "room1": "Maintenance Corridor",
+                "room2": "Pilot Ready Room"
+            },
+            {
+                "direction": "south",
+                "room1": "Pilot Ready Room",
+                "room2": "Maintenance Corridor"
+            },
+            {
+                "direction": "north",
+                "room1": "Pilot Ready Room",
+                "room2": "Emergency Escape Craft"
+            },
+            {
+                "direction": "south",
+                "room1": "Emergency Escape Craft",
+                "room2": "Pilot Ready Room"
+            }
+        ],
+        "original_room_visit_order": [
+            "Breach Room",
+            "Shower Block",
+            "Hallway",
+            "GravLift Station",
+            "Maintenance Corridor",
+            "Pilot Ready Room",
+            "Emergency Escape Craft"
+        ],
+        "rooms": [
+            {
+                "description": "The initial breach site, where the alien intruders first entered.  A fleshy membrane covers the hole.",
+                "image_prompt": "A spaceship's damaged hull, with a pulsating, fleshy membrane covering a hole, dark red veins visible.  Several naked, amphibian-like creatures lie on the floor, some showing signs of movement.",
+                "name": "Breach Room",
+                "canon_event": "The alien intruders emerged from a pressure-sealed membrane covering a hull breach in this room.  They lay sleeping, covered in grease, before awakening and attacking the Sol Guards.  A zero-gravity battle ensued, resulting in many casualties.  The intruders\u2019 laughter, gnawing, and the final explosion from Fig's bomb all occurred here before the room was breached into space.\n"
+            },
+            {
+                "description": "A shower block where the characters find themselves in zero gravity after the ship's artificial gravity fails.",
+                "image_prompt": "A spaceship shower block in zero gravity. Naked, pale figures with large heads and dark skin float around the room.  Weapons fire, blood splatters, and broken tiles float in the darkness.",
+                "name": "Shower Block",
+                "canon_event": "The shower block is the site of a brutal, zero-gravity battle.  Alien intruders, emerging from a pressure-sealed membrane in the wall, attack Sol Guards.  The ensuing fight leaves the room wrecked, bodies floating amidst shattered tiles and spent cartridges, before the breach causes a decompression event, sucking many out into space.\n"
+            },
+            {
+                "description": "A long corridor of the spaceship where the characters navigate through zero gravity, encountering dead bodies and the sounds of combat.",
+                "image_prompt": "A long, dark spaceship corridor in zero gravity, with floating bodies of soldiers and aliens.  Blood splatters and spent cartridges float in the darkness.  A sense of urgency and chaos.",
+                "name": "Hallway",
+                "canon_event": "The shower block, a room with tiled walls, is where the alien intruders emerge from a pressure-sealed membrane in the hull.  A firefight ensues in zero gravity, resulting in numerous casualties among the Sol Guards.  The intruders, wielding strange weapons, kill and mutilate the soldiers before the lights go out and the room is plunged into darkness.\n"
+            },
+            {
+                "description": "A gravLift station where the characters encounter a group of Sol Guards who are battling the alien intruders.",
+                "image_prompt": "A spaceship gravLift station, with Sol Guards in armor, fighting aliens in a zero-gravity environment.  Pulse rifles fire, blue light illuminates the scene. A large alien with a spiked helmet stands out.",
+                "name": "GravLift Station",
+                "canon_event": "The gravLift station is the setting for a fierce battle between Sol Guards and the alien intruders.  The aliens, initially appearing dormant, awaken and attack, utilizing spears and axes in zero gravity.  The ensuing fight results in numerous casualties, and the room is left in disarray, littered with bodies and weapons.  The gravity fluctuates during the conflict.\n"
+            },
+            {
+                "description": "Maintenance corridors where the characters navigate through the spaceship, encountering more combat and dead bodies.",
+                "image_prompt": "Dark, narrow spaceship maintenance corridors with damaged walls and exposed wires, in zero gravity.  Floating corpses in various states of disrepair.  Sounds of gunfire and screams echo in the distance.",
+                "name": "Maintenance Corridor",
+                "canon_event": "In the maintenance corridor, the characters encounter more combat with the alien intruders.  Dead Gray soldiers litter the area. Fig uses her retinal scan to access a restricted area, revealing a hidden escape craft.  Volga and the narrator narrowly avoid being ambushed multiple times before reaching the craft's entry point.\n"
+            },
+            {
+                "description": "A pilot ready room where the characters briefly rest before proceeding to their final escape route.",
+                "image_prompt": "A spaceship pilot ready room in disarray, lockers are open, gear is missing. Blood stains mar the walls. A sense of urgency and abandonment pervades the room.",
+                "name": "Pilot Ready Room",
+                "canon_event": "The pilot ready room is where Volga discovers Figment hiding in a locker.  A confrontation ensues, revealing Figment's betrayal and her nanotech emergency defense system (NEDS).  Volga and the narrator briefly rest, then learn of the ship's evacuation and impending nerve agent release. Figment reveals an alternative escape route.\n"
+            },
+            {
+                "description": "A secret emergency escape craft located beneath the bridge level, offering a last chance for survival.",
+                "image_prompt": "A small, sleek escape pod inside a hidden compartment within a spaceship, with a plush leather chair.  The walls are reinforced, weapons visible.",
+                "name": "Emergency Escape Craft",
+                "canon_event": "The emergency escape craft, a secret compartment beneath the bridge, is where Fig, Volga, and the narrator find refuge from the ship's invasion.  Inside, the narrator is propelled upwards through a high-speed chute, ending up in a plush chair within a lounge already occupied by Sol Guards and Victra au Barca.  The craft is later attacked, resulting in a crash landing on Mars.\n"
+            }
+        ]
+    }
+}
