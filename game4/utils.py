@@ -52,7 +52,6 @@ def process_book_with_gemini(story: str) -> str:
     1. A list of rooms with descriptions and image prompts that reference the book and spaceship setting
     2. A list of connections between the rooms detailed above, specifying which rooms connect and in what direction.
     3. A list of room names in the order they were visited in the book.
-    4. 3 variables tracking important story values
     
     For each room include:
     - A name for the spaceship location (STRICTLY 100 characters max)
@@ -64,9 +63,6 @@ def process_book_with_gemini(story: str) -> str:
     - The direction (north, south, east, or west) through the ship's corridors
     - Make sure all rooms are reachable from every other room through some path and only use rooms that are in the list above.
 
-    For variables, include:
-    - 3 initial values for important game state and their values
-    - Follow the format variable_name: value
 
     ##### STORY #####
     {story}
@@ -100,10 +96,10 @@ def process_book(pdf_path: str = BOOK_PATH, use_gemini: bool = True) -> str:
         return process_book_with_openai(story)
     
 def generate_game_data():
-    world_setup = process_book(BOOK_PATH, use_gemini=True)
+    # world_setup = process_book(BOOK_PATH, use_gemini=True)
 
-    with open('game_data.json', 'w') as f:
-        json.dump({'world': world_setup}, f)
+    # with open('game_data.json', 'w') as f:
+    #     json.dump({'world': world_setup}, f)
     
     # Load and print
     with open('game_data.json', 'r') as f:
@@ -114,6 +110,12 @@ def generate_game_data():
             world_data = data['world'] 
         print(world_data)
     
+
+    variables = generate_variables(world_data)
+    print("variables:", variables)
+    models.Variables.model_validate(json.loads(variables))
+    world_data['variables'] = json.loads(variables)['variables']
+
     # Generate canon events for each room
     for room in world_data['rooms']:
         # if True:
@@ -186,7 +188,28 @@ def generate_non_canon_event(room: models.Room, seen_events: List[str]) -> str:
     )
     return response.text
 
+def generate_variables(story: str) -> str:
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    
+    model = genai.GenerativeModel("gemini-1.5-flash") 
 
+    prompt = f"""
+    What factors influence the story? Create a few variables tracking important story values. Do not track the current location or locations visited.
+
+    For each variable, follow the format variable_name: initial value
+    ##### STORY #####
+    {story}
+    """
+    
+    response = model.generate_content(
+        [prompt], 
+        generation_config=genai.GenerationConfig(
+            response_mime_type="application/json", 
+            response_schema=models.Variables
+        )
+    )
+    return response.text
 # def generate_non_canon_event(room: Room, seen_events: List[str]) -> str:
 #     text = extract_text_from_pdf(BOOK_PATH)
 

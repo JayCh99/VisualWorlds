@@ -1,6 +1,7 @@
 from enum import Enum
 import typing_extensions as typing
 from typing import List, Dict, Optional
+from pydantic import BaseModel
 
 class Direction(str, Enum):
     NORTH = "north"
@@ -23,6 +24,9 @@ class WorldSetup(typing.TypedDict):
     connections: List[ConnectionDict]
     original_room_visit_order: List[str]
     # variables: List[str]
+
+class Variables(BaseModel):
+    variables: List[str]
 
 Event = typing.NamedTuple('Event', [('event', str), ('is_canon', bool)])
 
