@@ -1,35 +1,204 @@
 import os
-import shutil
 import json
-import hashlib
+import openai
+import google.generativeai as genai
+from pypdf import PdfReader
+from typing import Dict, List
+import game4.models as models
 
-def check_room_images():
-    # Load room data
+# Constants
+BOOK_PATH = os.path.join(os.path.dirname(__file__), "Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
+
+def process_book_with_openai(story: str) -> str:
+    client = openai.OpenAI(
+        api_key=os.getenv("OPENAI_API_KEY")
+    )
+
+    response = client.beta.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{
+            "role": "system", 
+            "content": f"""
+            I'm creating a playable version of the story attached. Create a list of rooms and the connections between them.
+
+            For each room include:
+            - A name for the spaceship location (STRICTLY 100 characters max)
+            - A description referencing details from the book and describing the spaceship setting (STRICTLY 50 words max) 
+            - An image prompt for DALL-E to generate an illustration of the spaceship interior (STRICTLY 100 words max)
+            
+            For connections, specify:
+            - Which two spaceship rooms are connected
+            - The direction (north, south, east, or west) through the ship's corridors
+
+            ##### STORY #####
+            {story}
+            """
+        }],
+        response_format={"type": "world_output"},
+    )
+
+    return response.choices[0].message.content
+
+def process_book_with_gemini(story: str) -> str:
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    
+    model = genai.GenerativeModel("gemini-1.5-flash") 
+
+    prompt = f"""
+    I'm creating a playable version of the story attached. Create a list of rooms and the connections between them.
+
+    Create a world with rooms representing different areas of the spaceship. Provide:
+    1. A list of rooms with descriptions and image prompts that reference the book and spaceship setting
+    2. A list of connections between the rooms detailed above, specifying which rooms connect and in what direction.
+    3. A list of room names in the order they were visited in the book.
+    4. 3 variables tracking important story values
+    
+    For each room include:
+    - A name for the spaceship location (STRICTLY 100 characters max)
+    - A description referencing details from the book and describing the spaceship setting (STRICTLY 50 words max) 
+    - An image prompt for DALL-E to generate an illustration of the spaceship interior (STRICTLY 100 words max)
+    
+    For connections, specify:
+    - Which two spaceship rooms are connected
+    - The direction (north, south, east, or west) through the ship's corridors
+    - Make sure all rooms are reachable from every other room through some path and only use rooms that are in the list above.
+
+    For variables, include:
+    - 3 initial values for important game state and their values
+    - Follow the format variable_name: value
+
+    ##### STORY #####
+    {story}
+    """
+    
+    response = model.generate_content(
+        [prompt], 
+        generation_config=genai.GenerationConfig(
+            response_mime_type="application/json", 
+            response_schema=models.WorldSetup
+        )
+    )
+    return response.text
+
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    reader = PdfReader(pdf_path)
+    story = ""
+    for page in reader.pages:
+        story += page.extract_text()
+    return story
+
+
+def process_book(pdf_path: str = BOOK_PATH, use_gemini: bool = True) -> str:
+    story = extract_text_from_pdf(pdf_path)
+
+    # Process with selected AI model
+    if use_gemini:
+        return process_book_with_gemini(story)
+    else:
+        return process_book_with_openai(story)
+    
+def generate_game_data():
+    world_setup = process_book(BOOK_PATH, use_gemini=True)
+
+    with open('game_data.json', 'w') as f:
+        json.dump({'world': world_setup}, f)
+    
+    # Load and print
     with open('game_data.json', 'r') as f:
         data = json.load(f)
-        world_data = json.loads(data['world'])
-        rooms = world_data['rooms']
+        if isinstance(data['world'], str):
+            world_data = json.loads(data['world'])
+        else:
+            world_data = data['world'] 
+        print(world_data)
+    
+    # Generate canon events for each room
+    for room in world_data['rooms']:
+        # if True:
+        if 'canon_event' not in room:
+            print(f"Generating canon event for {room['name']}")
+            room['canon_event'] = generate_canon_event(room)
+    
+    for room in world_data['rooms']:
+        print(f"Room: {room['name']}")
+        print(f"Canon Event: {room['canon_event']}")
 
-    # Calculate hashes for current rooms
-    valid_hashes = set()
-    for room in rooms:
-        room_hash = hashlib.sha256(
-            f"{room['name']}{room['description']}{room['image_prompt']}".encode()
-        ).hexdigest()
-        valid_hashes.add(room_hash)
+    # Save updated data back to file
+    with open('game_data.json', 'w') as f:
+        json.dump({'world': world_data}, f, indent=4)
 
-    # Create old directory if it doesn't exist
-    os.makedirs("room_images/old", exist_ok=True)
 
-    # Check all files in room_images
-    for filename in os.listdir("room_images"):
-        if filename.endswith(".png"):
-            file_hash = filename.replace(".png", "")
-            if file_hash not in valid_hashes:
-                # Move file to old directory
-                old_path = os.path.join("room_images", filename)
-                new_path = os.path.join("room_images", "old", filename)
-                shutil.move(old_path, new_path)
-                print(f"Moved {filename} to room_images/old/")
+def generate_canon_event(room: dict) -> str:
+    text = extract_text_from_pdf(BOOK_PATH)
+    
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash") 
 
-check_room_images()
+    prompt = f"""
+    What event in the story occurs in this room? Keep the description to 100 words max.
+
+    ##### STORY #####
+    {text}
+    
+    ##### ROOM DESCRIPTION #####
+    Room: {room['name']}
+    Description: {room['description']}
+    """
+    
+    response = model.generate_content(
+        [prompt], 
+        # generation_config=genai.GenerationConfig(
+        #     response_mime_type="application/json", 
+
+        # )
+    )
+    return response.text
+
+
+def generate_non_canon_event(room: models.Room, seen_events: List[str]) -> str:
+    text = extract_text_from_pdf(BOOK_PATH)
+
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+    genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+    model = genai.GenerativeModel("gemini-1.5-flash") 
+
+    prompt = f"""
+    Using the attached story, provided room description with its original canon event, and a list of canon events seen so far, create a desscription of a plausible non-canon event that occurs in the story in the room.
+    Keep the description to 100 words max.
+
+    ##### STORY #####
+    {text}
+    
+    ##### ROOM DESCRIPTION #####
+    Room: {room.name}
+    Description: {room.description}
+    Canon Event: {room.canon_event}
+
+    ##### EVENTS SEEN SO FAR #####
+    {seen_events}
+    """
+
+    response = model.generate_content(
+        [prompt], 
+    )
+    return response.text
+
+
+# def generate_non_canon_event(room: Room, seen_events: List[str]) -> str:
+#     text = extract_text_from_pdf(BOOK_PATH)
+
+#     os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+#     genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
+#     model = genai.GenerativeModel("gemini-1.5-flash") 
+
+#     prompt = f"""
+
+
+
+
+
+
+
