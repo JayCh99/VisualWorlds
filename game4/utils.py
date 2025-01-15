@@ -8,36 +8,10 @@ import game4.models as models
 
 # Constants
 BOOK_PATH = os.path.join(os.path.dirname(__file__), "Dark_Age_Red_Rising_Saga_5_-_Pierce_Brown-481-502.pdf")
+os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
+genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
-def process_book_with_openai(story: str) -> str:
-    client = openai.OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
-
-    response = client.beta.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{
-            "role": "system", 
-            "content": f"""
-            I'm creating a playable version of the story attached. Create a list of rooms and the connections between them.
-
-            For each room include:
-            - A name for the spaceship location (STRICTLY 100 characters max)
-            - A description referencing details from the book and describing the spaceship setting (STRICTLY 50 words max) 
-            - An image prompt for DALL-E to generate an illustration of the spaceship interior (STRICTLY 100 words max)
-            
-            For connections, specify:
-            - Which two spaceship rooms are connected
-            - The direction (north, south, east, or west) through the ship's corridors
-
-            ##### STORY #####
-            {story}
-            """
-        }],
-        response_format={"type": "world_output"},
-    )
-
-    return response.choices[0].message.content
+model = genai.GenerativeModel("gemini-1.5-flash") 
 
 def process_book_with_gemini(story: str) -> str:
     os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
@@ -92,8 +66,8 @@ def process_book(pdf_path: str = BOOK_PATH, use_gemini: bool = True) -> str:
     # Process with selected AI model
     if use_gemini:
         return process_book_with_gemini(story)
-    else:
-        return process_book_with_openai(story)
+    # else:
+    #     return process_book_with_openai(story)
     
 def generate_game_data():
     # world_setup = process_book(BOOK_PATH, use_gemini=True)
@@ -108,7 +82,7 @@ def generate_game_data():
             world_data = json.loads(data['world'])
         else:
             world_data = data['world'] 
-        print(world_data)
+        # print(world_data)
     
 
     variables = generate_variables(world_data)
@@ -120,12 +94,12 @@ def generate_game_data():
     for room in world_data['rooms']:
         # if True:
         if 'canon_event' not in room:
-            print(f"Generating canon event for {room['name']}")
+            # print(f"Generating canon event for {room['name']}")
             room['canon_event'] = generate_canon_event(room)
     
-    for room in world_data['rooms']:
-        print(f"Room: {room['name']}")
-        print(f"Canon Event: {room['canon_event']}")
+    # for room in world_data['rooms']:
+        # print(f"Room: {room['name']}")
+        # print(f"Canon Event: {room['canon_event']}")
 
     # Save updated data back to file
     with open('game_data.json', 'w') as f:
@@ -188,7 +162,8 @@ def generate_non_canon_event(room: models.Room, seen_events: List[str]) -> str:
     )
     return response.text
 
-def generate_variables(story: str) -> str:
+def generate_variables(world_data: dict) -> str:
+    text = extract_text_from_pdf(BOOK_PATH)
     os.environ["GOOGLE_API_KEY"] = "AIzaSyDD9YRzLbPU1o-XehqkvvQD9PLG0rokBws"
     genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
     
@@ -199,7 +174,7 @@ def generate_variables(story: str) -> str:
 
     For each variable, follow the format variable_name: initial value
     ##### STORY #####
-    {story}
+    {text}
     """
     
     response = model.generate_content(
@@ -210,6 +185,34 @@ def generate_variables(story: str) -> str:
         )
     )
     return response.text
+
+def generate_actions(room: models.Room, current_event: str, variables: str) -> str:
+    text = extract_text_from_pdf(BOOK_PATH)
+    prompt = f"""
+    What actions can the player take in this room based on the story, current event, and the variables?
+
+    Provide a list of 3 actions in the format:
+    Action 1: changed variables
+    Action 2: changed variables
+    Action 3: changed variables
+
+    ##### STORY #####
+    {text}
+    
+    ##### ROOM DESCRIPTION #####
+    Room: {room.name}
+    Description: {room.description}
+    Current Event: {current_event}
+
+    ##### VARIABLES #####
+    {variables}
+    """
+
+    response = model.generate_content(
+        [prompt], 
+    )
+    return response.text
+    
 # def generate_non_canon_event(room: Room, seen_events: List[str]) -> str:
 #     text = extract_text_from_pdf(BOOK_PATH)
 

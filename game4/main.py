@@ -12,6 +12,10 @@ import typing_extensions as typing
 import tkinter.ttk as ttk
 import openai
 from pypdf import PdfReader
+import game4.models as models
+import game4.game_world as game_world
+import game4.game_ui as game_ui
+import game4.utils as utils
 
 
 # class Direction(str, Enum):
@@ -571,43 +575,34 @@ from pypdf import PdfReader
 #     )
 #     return response.text
 
-from game4.models import Room, Direction
-from game4.game_world import GameWorld
-from game4.game_ui import GameUI
-from game4.utils import generate_game_data
-
 def run_game():
     with open('game_data.json', 'r') as f:
         data = json.load(f)
         if isinstance(data['world'], str):
-            world_data = json.loads(data['world'])  # Parse if it's a string
+            world_data = json.loads(data['world'])
         else:
-            world_data = data['world']  # Use as-is if it's already a dict
-        # world_data = json.loads(data['world'])  # Parse the string into JSON
+            world_data = data['world']
         rooms = world_data['rooms']
         connections = world_data['connections']
-        original_room_visit_order = world_data.get('original_room_visit_order', [])  # Get visit order
+        original_room_visit_order = world_data.get('original_room_visit_order', [])
+        variables = world_data.get('variables', "")
     
-    # Initialize game world with visit order
-    game_world = GameWorld(original_room_visit_order=original_room_visit_order)
+    game = game_world.GameWorld(original_room_visit_order=original_room_visit_order, variables=variables)
     
-    # Create rooms first
     for room_data in rooms:
-        room = Room(room_data["name"], room_data["description"], room_data["image_prompt"], room_data["canon_event"])
-        game_world.add_room(room)
-        # game_world.generate_room_image(room)
+        room = models.Room(room_data["name"], room_data["description"], 
+                         room_data["image_prompt"], room_data["canon_event"])
+        game.add_room(room)
     
-    # Then set up connections
     for conn in connections:
-        game_world.connect_rooms(conn["room1"], conn["room2"], Direction(conn["direction"]))
+        game.connect_rooms(conn["room1"], conn["room2"], models.Direction(conn["direction"]))
     
-    # Start the game UI
-    game_ui = GameUI(game_world)
-    game_ui.run()
+    game_ui_instance = game_ui.GameUI(game)
+    game_ui_instance.run()
 
 
 if __name__ == "__main__":
-    generate_game_data()
+    utils.generate_game_data()
     run_game()
 
 

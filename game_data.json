@@ -99,11 +99,19 @@
             }
         ],
         "variables": [
-            "player_health: 100",
-            "enemy_count: 20",
-            "weapons_found: 3",
-            "story_tension: high",
-            "escape_discovered: false"
+            "membrane_growth_rate: \"slow\"",
+            "intruder_count: 7",
+            "intruder_aggressiveness: \"passive\"",
+            "fig_transformation: \"incomplete\"",
+            "fig_weapon_type: \"experimental\"",
+            "ship_integrity: \"compromised\"",
+            "gravity_status: \"normal\"",
+            "oxygen_level: \"normal\"",
+            "casualty_count: 0",
+            "volga_status: \"unconscious\"",
+            "paxton_status: \"dead\"",
+            "fig_status: \"alive\"",
+            "player_status: \"alive\""
         ]
     }
 }

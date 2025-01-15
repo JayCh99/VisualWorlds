@@ -5,10 +5,10 @@ import requests
 from io import BytesIO
 from typing import Dict, List, Optional, Tuple
 from .models import Room, Direction, Event
-from .utils import generate_non_canon_event
+from .utils import generate_actions, generate_non_canon_event
 
 class GameWorld:
-    def __init__(self, original_room_visit_order: List[str] = None):
+    def __init__(self, original_room_visit_order: List[str] = None, variables: str = ""):
         self.rooms: Dict[str, Room] = {}
         self.current_room: Optional[Room] = None
         self.original_room_visit_order = original_room_visit_order or []
@@ -18,7 +18,9 @@ class GameWorld:
         self.current_event: Optional[Event] = None
         self.visited_rooms = []
         self.seen_events = []
-    
+        # self.variables = {}
+        self.variables = variables
+
     def is_canon_route(self) -> bool:
         # return True
         return self.visited_rooms == self.original_room_visit_order[:min(len(self.original_room_visit_order), len(self.visited_rooms))]
@@ -88,3 +90,6 @@ class GameWorld:
             return room.canon_event, True
         else:
             return generate_non_canon_event(room, self.seen_events), False
+    
+    def get_actions(self) -> str:
+        return generate_actions(self.current_room, self.current_event, self.variables)

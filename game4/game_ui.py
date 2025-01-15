@@ -222,7 +222,8 @@ class GameUI:
             self.game_world.current_event = Event(event=event, is_canon=is_canon)
             self.game_world.seen_events.append(Event)
             
-            
+            actions = self.game_world.get_actions()
+            print("actions", actions)
             self.update_display()
             
 
@@ -240,7 +241,6 @@ class GameUI:
         self.description_text.delete(1.0, tk.END)
         self.description_text.insert(tk.END, f"Current Room: {self.game_world.current_room.name}\n\n")
         self.description_text.insert(tk.END, f"{self.game_world.current_room.description}\n\n")
-        print(self.game_world.current_event.is_canon)
         event_type = "Non-Canon" if not self.game_world.current_event.is_canon else "Canon"
         self.description_text.insert(tk.END, f"{event_type} Event: {self.game_world.current_event.event}\n")
         
