@@ -602,7 +602,7 @@ def run_game():
 
 
 if __name__ == "__main__":
-    utils.generate_game_data()
+    # utils.generate_game_data()
     run_game()
 
 

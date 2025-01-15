@@ -28,6 +28,9 @@ class WorldSetup(typing.TypedDict):
 class Variables(BaseModel):
     variables: List[str]
 
+class Actions(BaseModel):
+    actions: List[str]
+
 Event = typing.NamedTuple('Event', [('event', str), ('is_canon', bool)])
 
 class Room:

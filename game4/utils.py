@@ -87,7 +87,7 @@ def generate_game_data():
 
     variables = generate_variables(world_data)
     print("variables:", variables)
-    models.Variables.model_validate(json.loads(variables))
+    # models.Variables.model_validate(json.loads(variables))
     world_data['variables'] = json.loads(variables)['variables']
 
     # Generate canon events for each room
@@ -210,8 +210,14 @@ def generate_actions(room: models.Room, current_event: str, variables: str) -> s
 
     response = model.generate_content(
         [prompt], 
+        generation_config=genai.GenerationConfig(
+            response_mime_type="application/json", 
+            response_schema=models.Actions
+        )
     )
-    return response.text
+
+    print("actions:", json.loads(response.text)['actions'])
+    return json.loads(response.text)['actions']
     
 # def generate_non_canon_event(room: Room, seen_events: List[str]) -> str:
 #     text = extract_text_from_pdf(BOOK_PATH)

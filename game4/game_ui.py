@@ -48,6 +48,25 @@ class GameUI:
         self.room_positions: Dict[str, Tuple[int, int]] = {}
         self.calculate_room_positions()
         
+        # Add variables section to map frame
+        self.variables_label = tk.Label(self.map_frame, text="Variables:", font=('Arial', 12, 'bold'))
+        self.variables_label.pack(pady=(20,5))
+        
+        self.variables_text = tk.Text(self.map_frame, height=5, width=30)
+        self.variables_text.pack()
+        
+        # Add actions section below description
+        self.actions_label = tk.Label(self.main_frame, text="Available Actions:", font=('Arial', 12, 'bold'))
+        self.actions_label.pack(pady=(20,5))
+        
+        # Create frame for action buttons
+        self.actions_button_frame = tk.Frame(self.main_frame)
+        self.actions_button_frame.pack()
+        
+        # Keep actions text for reference (can be hidden if not needed)
+        self.actions_text = tk.Text(self.main_frame, height=5, width=50)
+        self.actions_text.pack()
+        
         self.update_display()
 
     def calculate_room_positions(self):
@@ -263,6 +282,38 @@ class GameUI:
         
         # Update map
         self.draw_map()
+        
+        # Update variables
+        self.variables_text.delete(1.0, tk.END)
+        if hasattr(self.game_world, 'variables') and self.game_world.variables:
+            for var in self.game_world.variables:
+                self.variables_text.insert(tk.END, f"• {var}\n")
+        
+        # Clear existing action buttons
+        for widget in self.actions_button_frame.winfo_children():
+            widget.destroy()
+        
+        # Create new action buttons
+        actions = self.game_world.get_actions()
+        if actions:
+            for action in actions:
+                btn = tk.Button(
+                    self.actions_button_frame, 
+                    text=action,
+                    command=lambda a=action: self.perform_action(a)
+                )
+                btn.pack(pady=2)
+        
+        # Update actions text (can be hidden if not needed)
+        self.actions_text.delete(1.0, tk.END)
+        if actions:
+            for action in actions:
+                self.actions_text.insert(tk.END, f"• {action}\n")
 
     def run(self):
         self.root.mainloop()
+
+    def perform_action(self, action: str):
+        # Add this method to handle action button clicks
+        print(f"Performing action: {action}")
+        # TODO: Implement action handling logic
